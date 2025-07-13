@@ -14,7 +14,7 @@ connectDB();
 
 
 const app = express();
-
+app.use(express.json());
 // Middleware
 app.use(helmet());
 app.use(cors());
