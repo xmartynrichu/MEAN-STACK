@@ -27,10 +27,22 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// Health check
+
 app.get('/api/newuser', async (req, res) => {
   try {
     const users = await user.find();
+    res.json(users);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ error: 'Server error while fetching users' });
+  }
+});
+
+
+
+app.post('/api/savenewuser', async (req, res) => {
+  try {
+    const users = await user.insertOne(req.body);
     res.json(users);
   } catch (err) {
     console.error('Error fetching users:', err);
