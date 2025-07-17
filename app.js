@@ -21,10 +21,19 @@ app.use(bodyParser.json());
 app.use(helmet());
 app.use(morgan("dev"));
 
+
+
+
+app.get('/api/ip', (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  res.json({ ip });
+});
+
+
 // Routes
 app.get("/api/newuser", async (req, res) => {
   try {
-    const users = await user.find();
+    const users = await user.find().sort({ date: -1 });;
     res.json(users);
   } catch (err) {
     console.error("Error fetching users:", err);
@@ -34,7 +43,15 @@ app.get("/api/newuser", async (req, res) => {
 
 app.post("/api/savenewuser", async (req, res) => {
   try {
-    const users = await user.insertOne(req.body);
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+ const newUser = new user({
+      ...req.body,
+      ipaddress: ip 
+    });
+    const users = await newUser.save();
+
+
+
     res.json(users);
   } catch (err) {
     console.error("Error saving user:", err);
@@ -91,6 +108,24 @@ app.put("/api/updateuser/:id", async (req, res) => {
     res.status(500).json({ error: "Server error while updating user" });
   }
 });
+
+app.get("/api/userlogin", async (req, res) => {
+  try {
+    const name = req.query.name;
+    const singleUser = await user.findOne({ name });
+
+    if (!singleUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(singleUser);
+  } catch (err) {
+    console.error("Error fetching user by name:", err);
+    res.status(500).json({ error: "Server error while fetching user" });
+  }
+});
+
+
 
 app.listen(3000, () => console.log("Server running"));
 module.exports = app;
